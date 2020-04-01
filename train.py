@@ -53,6 +53,7 @@ def init() -> Namespace:
     assert opt.embed_dim % opt.n_head == 0, 'the number of heads should be the multiple of embed_dim'
 
     opt.device = torch.device('cuda' if opt.cuda else 'cpu')
+    logger.debug(f'device: {opt.device}')
     return opt
 
 
