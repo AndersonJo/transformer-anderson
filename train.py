@@ -45,6 +45,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
     if not os.path.exists(opt.checkpoint_path):
         os.makedirs(opt.checkpoint_path)
 
+    log_f = open('.train.log', 'w')
     train_data, val_data, src_vocab, trg_vocab = load_preprocessed_data(opt)
     min_loss = float('inf')
 
@@ -68,7 +69,8 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
             is_checkpointed = True
 
         # Print performance
-        _show_performance(epoch=epoch, step=optimizer.n_step, lr=optimizer.lr, t=_t, v=_v, checkpoint=is_checkpointed)
+        _show_performance(epoch=epoch, step=optimizer.n_step, lr=optimizer.lr, t=_t, v=_v,
+                          checkpoint=is_checkpointed, log_f=log_f)
 
 
 def train_per_epoch(opt: Namespace,
@@ -181,7 +183,7 @@ def calculate_loss(y_pred, y_true, trg_pad_idx):
     return F.cross_entropy(y_pred, y_true, ignore_index=trg_pad_idx, reduction='sum')
 
 
-def _show_performance(epoch, step, lr, t, v, checkpoint):
+def _show_performance(epoch, step, lr, t, v, checkpoint, log_f):
     mins = int(t['total_seconds'] / 60)
     secs = int(t['total_seconds'] % 60)
 
@@ -193,10 +195,12 @@ def _show_performance(epoch, step, lr, t, v, checkpoint):
     v_accuracy = v['accuracy']
     v_loss_per_word = v['loss_per_word']
 
-    print(f'[{epoch + 1:02}] {mins:02}:{secs:02} | loss:{t_loss:10.2f}/{v_loss:10.2f} | '
-          f'acc:{t_accuracy:7.4f}/{v_accuracy:7.4f} | '
-          f'loss_per_word:{t_loss_per_word:5.2f}/{v_loss_per_word:5.2f} | step:{step:5} | lr:{lr:6.4f}'
-          f'{" | checkpoint" if checkpoint else ""}')
+    msg = f'[{epoch + 1:02}] {mins:02}:{secs:02} | loss:{t_loss:10.2f}/{v_loss:10.2f} | ' \
+          f'acc:{t_accuracy:7.4f}/{v_accuracy:7.4f} | ' \
+          f'loss_per_word:{t_loss_per_word:5.2f}/{v_loss_per_word:5.2f} | step:{step:5} | lr:{lr:6.4f}' \
+          f'{" | checkpoint" if checkpoint else ""}'
+    print(msg)
+    log_f.write(msg)
 
 
 def main():

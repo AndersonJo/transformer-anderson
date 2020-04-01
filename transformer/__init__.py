@@ -18,7 +18,7 @@ def get_transformer(opt) -> Transformer:
     if checkpoint_file_path is not None:
         print(f'Checkpoint loaded - {checkpoint_file_path}')
         checkpoint = torch.load(checkpoint_file_path, map_location=opt.device)
-        model.load_state_dict(checkpoint['model'])
+        model.load_state_dict(checkpoint['weights'])
     return model
 
 
