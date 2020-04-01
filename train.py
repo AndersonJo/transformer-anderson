@@ -45,7 +45,6 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
     if not os.path.exists(opt.checkpoint_path):
         os.makedirs(opt.checkpoint_path)
 
-    log_f = open('.train.log', 'w')
     train_data, val_data, src_vocab, trg_vocab = load_preprocessed_data(opt)
     min_loss = float('inf')
 
@@ -70,7 +69,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
 
         # Print performance
         _show_performance(epoch=epoch, step=optimizer.n_step, lr=optimizer.lr, t=_t, v=_v,
-                          checkpoint=is_checkpointed, log_f=log_f)
+                          checkpoint=is_checkpointed)
 
 
 def train_per_epoch(opt: Namespace,
@@ -200,8 +199,6 @@ def _show_performance(epoch, step, lr, t, v, checkpoint, log_f):
           f'loss_per_word:{t_loss_per_word:5.2f}/{v_loss_per_word:5.2f} | step:{step:5} | lr:{lr:6.4f}' \
           f'{" | checkpoint" if checkpoint else ""}'
     print(msg)
-    log_f.write(msg + '\n')
-    log_f.flush()
 
 
 def main():
