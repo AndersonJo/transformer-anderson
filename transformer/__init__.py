@@ -1,9 +1,12 @@
+import logging
 import os
 import re
 
 import torch
 
 from transformer.models import Transformer
+
+logger = logging.getLogger('transformer')
 
 
 def get_transformer(opt) -> Transformer:
@@ -16,7 +19,7 @@ def get_transformer(opt) -> Transformer:
     model = model.to(opt.device)
     checkpoint_file_path = get_best_checkpoint(opt)
     if checkpoint_file_path is not None:
-        print(f'Checkpoint loaded - {checkpoint_file_path}')
+        logger.info(f'Checkpoint loaded - {checkpoint_file_path}')
         checkpoint = torch.load(checkpoint_file_path, map_location=opt.device)
         model.load_state_dict(checkpoint['weights'])
     return model

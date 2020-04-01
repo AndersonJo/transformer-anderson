@@ -1,10 +1,10 @@
 import argparse
+import logging
 import os
 from argparse import Namespace
 from datetime import datetime
 from typing import Tuple
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -13,6 +13,21 @@ from tools.data_loader import load_preprocessed_data
 from transformer import get_transformer
 from transformer.models import Transformer
 from transformer.optimizer import ScheduledAdam
+
+# Logging Configuration
+logFormatter = logging.Formatter('%(message)s')
+logger = logging.getLogger('transformer')
+logger.setLevel(logging.DEBUG)
+
+fileHandler = logging.FileHandler('.train.log')
+fileHandler.setLevel(logging.DEBUG)
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
+
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(logging.DEBUG)
+streamHandler.setFormatter(logFormatter)
+logger.addHandler(streamHandler)
 
 
 def init() -> Namespace:
@@ -97,6 +112,9 @@ def train_per_epoch(opt: Namespace,
         total_loss += loss.item()
         total_word += n_word
         total_corrected_word += n_corrected
+
+        if i > 10:
+            break
 
     loss_per_word = total_loss / total_word
     accuracy = total_corrected_word / total_word
@@ -198,7 +216,7 @@ def _show_performance(epoch, step, lr, t, v, checkpoint):
           f'acc:{t_accuracy:7.4f}/{v_accuracy:7.4f} | ' \
           f'loss_per_word:{t_loss_per_word:5.2f}/{v_loss_per_word:5.2f} | step:{step:5} | lr:{lr:6.4f}' \
           f'{" | checkpoint" if checkpoint else ""}'
-    print(msg)
+    logger.info(msg)
 
 
 def main():
