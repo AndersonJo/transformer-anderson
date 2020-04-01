@@ -200,7 +200,8 @@ def _show_performance(epoch, step, lr, t, v, checkpoint, log_f):
           f'loss_per_word:{t_loss_per_word:5.2f}/{v_loss_per_word:5.2f} | step:{step:5} | lr:{lr:6.4f}' \
           f'{" | checkpoint" if checkpoint else ""}'
     print(msg)
-    log_f.write(msg)
+    log_f.write(msg + '\n')
+    log_f.flush()
 
 
 def main():
