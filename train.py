@@ -113,9 +113,6 @@ def train_per_epoch(opt: Namespace,
         total_word += n_word
         total_corrected_word += n_corrected
 
-        if i > 10:
-            break
-
     loss_per_word = total_loss / total_word
     accuracy = total_corrected_word / total_word
 
