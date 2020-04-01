@@ -19,7 +19,7 @@ logFormatter = logging.Formatter('%(message)s')
 logger = logging.getLogger('transformer')
 logger.setLevel(logging.DEBUG)
 
-fileHandler = logging.FileHandler('.train.log')
+fileHandler = logging.FileHandler('.train.log', 'w+')
 fileHandler.setLevel(logging.DEBUG)
 fileHandler.setFormatter(logFormatter)
 logger.addHandler(fileHandler)
