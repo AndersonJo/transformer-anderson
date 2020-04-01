@@ -182,7 +182,7 @@ def calculate_loss(y_pred, y_true, trg_pad_idx):
     return F.cross_entropy(y_pred, y_true, ignore_index=trg_pad_idx, reduction='sum')
 
 
-def _show_performance(epoch, step, lr, t, v, checkpoint, log_f):
+def _show_performance(epoch, step, lr, t, v, checkpoint):
     mins = int(t['total_seconds'] / 60)
     secs = int(t['total_seconds'] % 60)
 

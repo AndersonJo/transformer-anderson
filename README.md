@@ -30,3 +30,9 @@ python train.py
 ```
 python3.6 train.py --batch_size=64
 ```
+
+Cloud에서 학습시 nohup사용은 유용합니다.
+
+```bash
+nohup python train.py > .train.log &
+```
