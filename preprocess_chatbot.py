@@ -8,17 +8,11 @@ import torchtext
 from torchtext.data import Field
 
 from tools import const
-from tools.tokenizer import Tokenizer
+from tools.tokenizer import Tokenizer, TokenizerKorea
 
 
 def init() -> Namespace:
-    spacy_support_langs = ['de', 'el', 'en', 'es', 'fr', 'it', 'lt', 'nb', 'nl', 'pt']
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lang_src', default='de', choices=spacy_support_langs)
-    parser.add_argument('--lang_trg', default='en', choices=spacy_support_langs)
-    parser.add_argument('--data_src', type=str)
-    parser.add_argument('--save_data', type=str, default='.data/data.pkl')
 
     parser.add_argument('--max_seq_len', type=int, default=100)
     parser.add_argument('--min_word_freq', type=int, default=3, help='minimum word count')
@@ -29,12 +23,11 @@ def init() -> Namespace:
 
 
 def create_torch_fields(opt: Namespace) -> Tuple[Field, Field]:
-    tokenizer_src = Tokenizer(opt.lang_src)
-    tokenizer_trg = Tokenizer(opt.lang_trg)
+    tokenizer = TokenizerKorea()
 
-    src = Field(tokenize=tokenizer_src.tokenizer, lower=True,
+    src = Field(tokenize=tokenizer.tokenizer, lower=True,
                 pad_token=const.PAD, init_token=const.SOS, eos_token=const.EOS)
-    trg = Field(tokenize=tokenizer_trg.tokenizer, lower=True,
+    trg = Field(tokenize=tokenizer.tokenizer, lower=True,
                 pad_token=const.PAD, init_token=const.SOS, eos_token=const.EOS)
 
     return src, trg

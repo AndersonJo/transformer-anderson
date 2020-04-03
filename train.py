@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from tools.data_loader import load_preprocessed_data
-from transformer import get_transformer
+from transformer import load_transformer_to_train
 from transformer.models import Transformer
 from transformer.optimizer import ScheduledAdam
 
@@ -221,7 +221,7 @@ def main():
     opt = init()
     train_data, val_data, src_vocab, trg_vocab = load_preprocessed_data(opt)
 
-    transformer = get_transformer(opt)
+    transformer = load_transformer_to_train(opt)
     optimizer = ScheduledAdam(transformer.parameters(), opt.embed_dim, warmup_steps=opt.warmup_steps)
 
     train(opt, transformer, optimizer)

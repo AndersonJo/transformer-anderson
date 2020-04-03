@@ -9,7 +9,7 @@ from transformer.models import Transformer
 logger = logging.getLogger('transformer')
 
 
-def get_transformer(opt) -> Transformer:
+def load_transformer_to_train(opt) -> Transformer:
     model = Transformer(embed_dim=opt.embed_dim,
                         src_vocab_size=opt.src_vocab_size,
                         trg_vocab_size=opt.trg_vocab_size,
@@ -23,6 +23,26 @@ def get_transformer(opt) -> Transformer:
         checkpoint = torch.load(checkpoint_file_path, map_location=opt.device)
         model.load_state_dict(checkpoint['weights'])
     return model
+
+
+def load_transformer(opt) -> Transformer:
+    checkpoint_file_path = get_best_checkpoint(opt)
+    checkpoint = torch.load(checkpoint_file_path, map_location=opt.device)
+
+    assert checkpoint is not None
+    assert checkpoint['opt'] is not None
+    assert checkpoint['weights'] is not None
+
+    model_opt = checkpoint['opt']
+    model = Transformer(embed_dim=model_opt.embed_dim,
+                        src_vocab_size=model_opt.src_vocab_size,
+                        trg_vocab_size=model_opt.trg_vocab_size,
+                        src_pad_idx=model_opt.src_pad_idx,
+                        trg_pad_idx=model_opt.trg_pad_idx,
+                        n_head=model_opt.n_head)
+
+    model.load_state_dict(checkpoint['weights'])
+    return model.to(opt.device)
 
 
 def get_best_checkpoint(opt):

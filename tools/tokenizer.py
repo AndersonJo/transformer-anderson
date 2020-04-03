@@ -1,6 +1,7 @@
 import re
 
 import spacy
+from konlpy.tag import Mecab
 
 
 class Tokenizer(object):
@@ -15,3 +16,11 @@ class Tokenizer(object):
         sentence = re.sub(r"\?+", "?", sentence)
         sentence = sentence.lower()
         return [tok.text for tok in self.nlp.tokenizer(sentence) if tok.text != " "]
+
+
+class TokenizerKorea(object):
+    def __init__(self):
+        self.nlp = Mecab()
+
+    def tokenizer(self, sentence):
+        pass
