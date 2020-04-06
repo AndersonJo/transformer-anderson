@@ -1,7 +1,7 @@
 import argparse
 import pickle
 from argparse import Namespace
-from typing import Generator, List
+from typing import Generator, List, Tuple
 
 import torch
 from nltk.corpus import wordnet
@@ -29,7 +29,7 @@ def init() -> Namespace:
     return opt
 
 
-def load_data(opt) -> Dataset:
+def load_data(opt) -> Tuple[Dataset, Vocab, Vocab]:
     data = pickle.load(open(opt.data, 'rb'))
     src: Field = data['src']
     trg: Field = data['trg']
@@ -40,7 +40,7 @@ def load_data(opt) -> Dataset:
     opt.trg_eos_idx = trg.vocab.stoi[const.EOS]
 
     test_loader = Dataset(examples=data['test'], fields={'src': src, 'trg': trg})
-    return test_loader
+    return test_loader, src.vocab, trg.vocab
 
 
 def get_word_or_synonym(vocab: Vocab, word: str, unk_idx: int):
@@ -73,7 +73,7 @@ def main():
     model = load_transformer(opt)
 
     # Load test dataset
-    test_loader = load_data(opt)
+    test_loader, src_vocab, trg_vocab = load_data(opt)
 
     # Load Translator
     translator = Translator(model=load_transformer(opt),
@@ -86,7 +86,14 @@ def main():
                             trg_eos_idx=opt.trg_eos_idx)
 
     for src_seq in iterate_test_data(test_loader, device=opt.device):
-        translator.translate(src_seq)
+        pred_seq = translator.translate(src_seq)
+        pred_sentence = []
+        for idx in pred_seq:
+            word = src_vocab.itos[idx]
+            if word not in {const.SOS, const.EOS}:
+                pred_sentence.append(word)
+        pred_sentence = ' '.join(pred_sentence)
+        print(pred_sentence)
 
 
 if __name__ == '__main__':
