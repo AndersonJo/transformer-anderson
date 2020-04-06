@@ -45,7 +45,7 @@ def init() -> Namespace:
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--embed_dim', default=512, type=int)
     parser.add_argument('--n_head', default=8, type=int, help='the number of multi heads')
-    parser.add_argument('--warmup_steps', default=1000, type=int, help='the number of warmup steps')
+    parser.add_argument('--warmup_steps', default=12000, type=int, help='the number of warmup steps')
 
     # Parse
     parser.set_defaults(share_embed_weights=True)
@@ -72,7 +72,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
 
         # Checkpoint
         is_checkpointed = False
-        if _v['loss_per_word'] <= min_loss:
+        if round(_v['loss_per_word'], 2) <= round(min_loss, 2):
             min_loss = _v['loss_per_word']
             checkpoint = {'epoch': epoch,
                           'opt': opt,
