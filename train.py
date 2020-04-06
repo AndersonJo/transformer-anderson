@@ -68,7 +68,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
     for epoch in range(opt.epoch):
         # Training and Evaluation
         _t = train_per_epoch(opt, model, optimizer, train_data, src_vocab, trg_vocab)
-        _v = evaluate_epoch(opt, model, val_data)
+        _v = evaluate_epoch(opt, model, val_data, src_vocab, trg_vocab)
 
         # Checkpoint
         is_checkpointed = False
@@ -132,7 +132,7 @@ def train_per_epoch(opt: Namespace,
             'accuracy': accuracy}
 
 
-def evaluate_epoch(opt: Namespace, model: Transformer, val_data):
+def evaluate_epoch(opt: Namespace, model: Transformer, val_data, src_vocab, trg_vocab):
     model.eval()
     start_time = datetime.now()
     total_loss = total_word = total_corrected_word = 0
@@ -144,7 +144,7 @@ def evaluate_epoch(opt: Namespace, model: Transformer, val_data):
 
             # Forward
             y_pred = model(src_input, trg_input)
-            loss = calculate_loss(y_pred, y_true, opt.trg_pad_idx)
+            loss = calculate_loss(y_pred, y_true, opt.trg_pad_idx, trg_vocab)
             n_word, n_corrected = calculate_performance(y_pred, y_true, opt.trg_pad_idx)
 
             # Validation Logs
