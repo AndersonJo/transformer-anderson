@@ -72,8 +72,8 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
 
         # Checkpoint
         is_checkpointed = False
-        if _v['total_loss'] < min_loss:
-            min_loss = _v['total_loss']
+        if _v['loss_per_word'] <= min_loss:
+            min_loss = _v['loss_per_word']
             checkpoint = {'epoch': epoch,
                           'opt': opt,
                           'weights': model.state_dict(),
