@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from tools.data_loader import load_preprocessed_data
 from transformer import load_transformer_to_train
+from transformer.debug import to_sentence
 from transformer.models import Transformer
 from transformer.optimizer import ScheduledAdam
 
@@ -44,7 +45,7 @@ def init() -> Namespace:
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--embed_dim', default=512, type=int)
     parser.add_argument('--n_head', default=8, type=int, help='the number of multi heads')
-    parser.add_argument('--warmup_steps', default=124000, type=int, help='the number of warmup steps')
+    parser.add_argument('--warmup_steps', default=4000, type=int, help='the number of warmup steps')
 
     # Parse
     parser.set_defaults(share_embed_weights=True)
@@ -66,7 +67,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
 
     for epoch in range(opt.epoch):
         # Training and Evaluation
-        _t = train_per_epoch(opt, model, optimizer, train_data)
+        _t = train_per_epoch(opt, model, optimizer, train_data, src_vocab, trg_vocab)
         _v = evaluate_epoch(opt, model, val_data)
 
         # Checkpoint
@@ -91,7 +92,9 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
 def train_per_epoch(opt: Namespace,
                     model: Transformer,
                     optimizer: ScheduledAdam,
-                    train_data) -> dict:
+                    train_data,
+                    src_vocab,
+                    trg_vocab) -> dict:
     model.train()
     start_time = datetime.now()
     total_loss = total_word = total_corrected_word = 0
@@ -103,8 +106,12 @@ def train_per_epoch(opt: Namespace,
         optimizer.zero_grad()
         y_pred = model(src_input, trg_input)
 
+        # DEBUG
+        # pred_sentence = to_sentence(y_pred[0], trg_vocab)
+        # true_sentence = to_sentence(batch.trg[:, 0], trg_vocab)
+
         # Backward and update parameters
-        loss = calculate_loss(y_pred, y_true, opt.trg_pad_idx)
+        loss = calculate_loss(y_pred, y_true, opt.trg_pad_idx, trg_vocab)
         n_word, n_corrected = calculate_performance(y_pred, y_true, opt.trg_pad_idx)
         loss.backward()
         optimizer.step()
@@ -181,7 +188,7 @@ def calculate_performance(y_pred: torch.Tensor, y_true: torch.Tensor, trg_pad_id
     return n_word, n_corrected
 
 
-def calculate_loss(y_pred, y_true, trg_pad_idx):
+def calculate_loss(y_pred, y_true, trg_pad_idx, trg_vocab):
     """
     y_pred는 trg_vocab_size인 vector 형태로 들어오고,
     y_true값은 index값으로 들어옴.
@@ -192,6 +199,12 @@ def calculate_loss(y_pred, y_true, trg_pad_idx):
     :param trg_pad_idx:
     :return:
     """
+    # DEBUG
+    # true_sentence = to_sentence(y_true.reshape(64, -1)[0], trg_vocab)
+    # pred_sentence = to_sentence(y_pred[0], trg_vocab)
+    # print(true_sentence)
+    # print(pred_sentence)
+
     y_pred = y_pred.view(-1, y_pred.size(-1))
     y_true = y_true.contiguous().view(-1)
 

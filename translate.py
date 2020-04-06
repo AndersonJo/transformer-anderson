@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from tools import const
 from transformer import load_transformer
-from torchtext.data import Dataset, Field
+from torchtext.data import Dataset, Field, Example
 
 from transformer.translator import Translator
 
@@ -57,13 +57,15 @@ def get_word_or_synonym(vocab: Vocab, word: str, unk_idx: int):
 
 
 def iterate_test_data(data_loader: Dataset,
-                      device: torch.device) -> Generator[torch.LongTensor, torch.LongTensor, None]:
+                      device: torch.device) -> Generator[Tuple[Example, torch.LongTensor],
+                                                         Tuple[Example, torch.LongTensor],
+                                                         None]:
     src_vocab = data_loader.fields['src'].vocab
     unk_idx = src_vocab.stoi[const.UNK]
 
-    for example in tqdm(data_loader, mininterval=1, desc='Evaluation', leave=False):
+    for example in data_loader:  # tqdm(data_loader, mininterval=1, desc='Evaluation', leave=False):
         src_seq = [get_word_or_synonym(src_vocab, word, unk_idx) for word in example.src]
-        yield torch.LongTensor([src_seq]).to(device)
+        yield example, torch.LongTensor([src_seq]).to(device)
 
 
 def main():
@@ -85,14 +87,17 @@ def main():
                             trg_sos_idx=opt.trg_sos_idx,
                             trg_eos_idx=opt.trg_eos_idx)
 
-    for src_seq in iterate_test_data(test_loader, device=opt.device):
+    for i, (example, src_seq) in enumerate(iterate_test_data(test_loader, device=opt.device)):
         pred_seq = translator.translate(src_seq)
         pred_sentence = []
         for idx in pred_seq:
-            word = src_vocab.itos[idx]
+            word = trg_vocab.itos[idx]
             if word not in {const.SOS, const.EOS}:
                 pred_sentence.append(word)
         pred_sentence = ' '.join(pred_sentence)
+
+        print(f'[{i}]')
+        print(example.trg)
         print(pred_sentence)
 
 
