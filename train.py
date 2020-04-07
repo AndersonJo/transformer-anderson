@@ -45,7 +45,7 @@ def init() -> Namespace:
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--embed_dim', default=512, type=int)
     parser.add_argument('--n_head', default=8, type=int, help='the number of multi heads')
-    parser.add_argument('--warmup_steps', default=12000, type=int, help='the number of warmup steps')
+    parser.add_argument('--warmup_steps', default=10000, type=int, help='the number of warmup steps')
 
     # Parse
     parser.set_defaults(share_embed_weights=True)
@@ -71,18 +71,16 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
         _v = evaluate_epoch(opt, model, val_data, src_vocab, trg_vocab)
 
         # Checkpoint
-        is_checkpointed = False
-        if round(_v['loss_per_word'], 2) <= round(min_loss, 2):
-            min_loss = _v['loss_per_word']
-            checkpoint = {'epoch': epoch,
-                          'opt': opt,
-                          'weights': model.state_dict(),
-                          'loss': min_loss,
-                          '_t': _t,
-                          '_v': _v}
-            model_name = os.path.join(opt.checkpoint_path, f'checkpoint_{min_loss:.4f}.chkpt')
-            torch.save(checkpoint, model_name)
-            is_checkpointed = True
+        min_loss = _v['loss_per_word']
+        checkpoint = {'epoch': epoch,
+                      'opt': opt,
+                      'weights': model.state_dict(),
+                      'loss': min_loss,
+                      '_t': _t,
+                      '_v': _v}
+        model_name = os.path.join(opt.checkpoint_path, f'checkpoint_{epoch:04}_{min_loss:.4f}.chkpt')
+        torch.save(checkpoint, model_name)
+        is_checkpointed = True
 
         # Print performance
         _show_performance(epoch=epoch, step=optimizer.n_step, lr=optimizer.lr, t=_t, v=_v,
