@@ -42,11 +42,12 @@ def load_transformer(opt) -> Transformer:
                         n_head=model_opt.n_head)
 
     model.load_state_dict(checkpoint['weights'])
+    print('model loaded:', checkpoint_file_path)
     return model.to(opt.device)
 
 
 def get_best_checkpoint(opt):
-    regex = re.compile('checkpoint_(\d+\.\d+)\.chkpt')
+    regex = re.compile('checkpoint_(\d+)_(\d+\.\d+)\.chkpt')
     checkpoints = []
     if os.path.exists(opt.checkpoint_path):
         for name in os.listdir(opt.checkpoint_path):
@@ -55,5 +56,5 @@ def get_best_checkpoint(opt):
     if not checkpoints:
         return None
 
-    checkpoints = sorted(checkpoints, key=lambda x: x[1])
+    checkpoints = sorted(checkpoints, key=lambda x: -x[1])
     return os.path.join(opt.checkpoint_path, checkpoints[0][0])

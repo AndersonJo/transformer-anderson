@@ -50,8 +50,12 @@ def merge_source_and_target(src, trg):
     trg.vocab.itos = src.vocab.itos
     trg.vocab.freqs = src.vocab.freqs
 
+    assert trg.vocab.stoi == src.vocab.stoi
+    assert trg.vocab.itos == src.vocab.itos
+    assert trg.vocab.freqs == src.vocab.freqs
     print(f'Merged source vocabulary: {len(src.vocab)}')
     print(f'Merged target vocabulary: {len(trg.vocab)}')
+
     return src, trg
 
 

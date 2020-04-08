@@ -3,14 +3,17 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchtext.vocab import Vocab
 
 from transformer import Transformer
+from transformer.debug import to_sentence
 from transformer.mask import create_nopeak_mask, create_padding_mask
 
 
 class Translator(nn.Module):
     def __init__(self, model: Transformer, beam_size: int, device: torch.device, max_seq_len: int,
-                 src_pad_idx: int, trg_pad_idx: int, trg_sos_idx: int, trg_eos_idx: int):
+                 src_pad_idx: int, trg_pad_idx: int, trg_sos_idx: int, trg_eos_idx: int,
+                 src_vocab: Vocab, trg_vocab: Vocab):
         super(Translator, self).__init__()
 
         self.model = model
@@ -23,6 +26,9 @@ class Translator(nn.Module):
         self.trg_pad_idx = trg_pad_idx
         self.trg_sos_idx = trg_sos_idx
         self.trg_eos_idx = trg_eos_idx
+
+        self.src_vocab = src_vocab
+        self.trg_vocab = trg_vocab
 
         # init_trg_seq: [["<sos>"]] 로 시작하는 matrix 이며, output 의 초기값으로 사용됨
         # beam_output: beam search 를 하기 위해서 decoder에서 나온 output 값들을 저장한다
@@ -46,8 +52,6 @@ class Translator(nn.Module):
             - enc_output: (beam_size, seq_len, embed_dim)
             - beam_output: (beam_size, max_seq_len)
             - scores: (beam_size,)
-
-
         """
         # Encoder
         # 먼저 source sentence tensor 를 encoder 에 집어넣고 encoder output 을 냅니다
@@ -143,9 +147,16 @@ class Translator(nn.Module):
             eos_indices, _ = self.seq_arange.masked_fill(~eos_loc, self.max_seq_len).min(1)
 
             n_complete_sentences = (eos_loc.sum(1) > 0).sum().item()
+
+            # DEBUG
+            # print(to_sentence(src_seq[0], self.src_vocab))
+            # for i in range(5):
+            #     print(to_sentence(beam_output[i], self.src_vocab)[:150])
+
             if n_complete_sentences == self.beam_size:
                 ans_row_idx = (scores / (eos_indices.float() ** 0.7)).max(0)[1].item()
                 break
+
         return beam_output[ans_row_idx][:eos_indices[ans_row_idx]].tolist()
 
     def translate(self, src_seq: torch.LongTensor):

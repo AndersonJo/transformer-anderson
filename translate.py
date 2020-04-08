@@ -29,18 +29,19 @@ def init() -> Namespace:
     return opt
 
 
-def load_data(opt) -> Tuple[Dataset, Vocab, Vocab]:
+def load_data(opt) -> Tuple[Dataset, Dataset, Vocab, Vocab]:
     data = pickle.load(open(opt.data, 'rb'))
     src: Field = data['src']
     trg: Field = data['trg']
 
     opt.src_pad_idx = src.vocab.stoi[const.PAD]
-    opt.trg_pad_idx = trg.vocab.stoi[const.PAD]
-    opt.trg_sos_idx = trg.vocab.stoi[const.SOS]
-    opt.trg_eos_idx = trg.vocab.stoi[const.EOS]
+    opt.trg_pad_idx = src.vocab.stoi[const.PAD]  # trg.vocab.stoi[const.PAD]
+    opt.trg_sos_idx = src.vocab.stoi[const.SOS]  # trg.vocab.stoi[const.SOS]
+    opt.trg_eos_idx = src.vocab.stoi[const.EOS]  # trg.vocab.stoi[const.EOS]
 
+    train_loader = Dataset(examples=data['train'], fields={'src': src, 'trg': trg})
     test_loader = Dataset(examples=data['test'], fields={'src': src, 'trg': trg})
-    return test_loader, src.vocab, trg.vocab
+    return train_loader, test_loader, src.vocab, trg.vocab
 
 
 def get_word_or_synonym(vocab: Vocab, word: str, unk_idx: int):
@@ -71,11 +72,8 @@ def iterate_test_data(data_loader: Dataset,
 def main():
     opt = init()
 
-    # Load trained model
-    model = load_transformer(opt)
-
     # Load test dataset
-    test_loader, src_vocab, trg_vocab = load_data(opt)
+    train_loader, test_loader, src_vocab, trg_vocab = load_data(opt)
 
     # Load Translator
     translator = Translator(model=load_transformer(opt),
@@ -85,20 +83,20 @@ def main():
                             src_pad_idx=opt.src_pad_idx,
                             trg_pad_idx=opt.trg_pad_idx,
                             trg_sos_idx=opt.trg_sos_idx,
-                            trg_eos_idx=opt.trg_eos_idx)
+                            trg_eos_idx=opt.trg_eos_idx,
+                            src_vocab=src_vocab,
+                            trg_vocab=trg_vocab)
 
-    for i, (example, src_seq) in enumerate(iterate_test_data(test_loader, device=opt.device)):
+    for i, (example, src_seq) in enumerate(iterate_test_data(train_loader, device=opt.device)):
         pred_seq = translator.translate(src_seq)
         pred_sentence = []
         for idx in pred_seq:
             word = trg_vocab.itos[idx]
             if word not in {const.SOS, const.EOS}:
                 pred_sentence.append(word)
-        pred_sentence = ' '.join(pred_sentence)
+        # pred_sentence = ' '.join(pred_sentence)
 
-        print(f'[{i}]')
-        print(example.trg)
-        print(pred_sentence)
+        print(i, pred_sentence)
 
 
 if __name__ == '__main__':

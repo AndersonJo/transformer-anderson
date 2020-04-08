@@ -70,7 +70,7 @@ def train(opt: Namespace, model: Transformer, optimizer: ScheduledAdam):
         _t = train_per_epoch(opt, model, optimizer, train_data, src_vocab, trg_vocab)
         _v = evaluate_epoch(opt, model, val_data, src_vocab, trg_vocab)
 
-        # Checkpoint
+        # Save checkpoint
         min_loss = _v['loss_per_word']
         checkpoint = {'epoch': epoch,
                       'opt': opt,
@@ -105,8 +105,12 @@ def train_per_epoch(opt: Namespace,
         y_pred = model(src_input, trg_input)
 
         # DEBUG
-        # pred_sentence = to_sentence(y_pred[0], trg_vocab)
-        # true_sentence = to_sentence(batch.trg[:, 0], trg_vocab)
+        pred_sentence = to_sentence(y_pred[0], trg_vocab)
+        true_sentence = to_sentence(batch.trg[:, 0], trg_vocab)
+        print(pred_sentence)
+        print(true_sentence)
+        import ipdb
+        ipdb.set_trace()
 
         # Backward and update parameters
         loss = calculate_loss(y_pred, y_true, opt.trg_pad_idx, trg_vocab)
