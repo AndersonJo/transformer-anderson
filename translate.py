@@ -12,6 +12,7 @@ from tools import const
 from transformer import load_transformer
 from torchtext.data import Dataset, Field, Example
 
+from transformer.debug import to_sentence
 from transformer.translator import Translator
 
 
@@ -35,9 +36,9 @@ def load_data(opt) -> Tuple[Dataset, Dataset, Vocab, Vocab]:
     trg: Field = data['trg']
 
     opt.src_pad_idx = src.vocab.stoi[const.PAD]
-    opt.trg_pad_idx = src.vocab.stoi[const.PAD]  # trg.vocab.stoi[const.PAD]
-    opt.trg_sos_idx = src.vocab.stoi[const.SOS]  # trg.vocab.stoi[const.SOS]
-    opt.trg_eos_idx = src.vocab.stoi[const.EOS]  # trg.vocab.stoi[const.EOS]
+    opt.trg_pad_idx = trg.vocab.stoi[const.PAD]
+    opt.trg_sos_idx = trg.vocab.stoi[const.SOS]
+    opt.trg_eos_idx = trg.vocab.stoi[const.EOS]
 
     train_loader = Dataset(examples=data['train'], fields={'src': src, 'trg': trg})
     test_loader = Dataset(examples=data['test'], fields={'src': src, 'trg': trg})
@@ -87,15 +88,14 @@ def main():
                             src_vocab=src_vocab,
                             trg_vocab=trg_vocab)
 
-    for i, (example, src_seq) in enumerate(iterate_test_data(train_loader, device=opt.device)):
+    for i, (example, src_seq) in enumerate(iterate_test_data(test_loader, device=opt.device)):
         pred_seq = translator.translate(src_seq)
         pred_sentence = []
         for idx in pred_seq:
             word = trg_vocab.itos[idx]
             if word not in {const.SOS, const.EOS}:
                 pred_sentence.append(word)
-        # pred_sentence = ' '.join(pred_sentence)
-
+        pred_sentence = ' '.join(pred_sentence)
         print(i, pred_sentence)
 
 

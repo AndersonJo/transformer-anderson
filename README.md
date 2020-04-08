@@ -8,6 +8,13 @@ python -m spacy download en
 python -m spacy download de
 ```
 
+python 을 실행후 다음을 설치합니다.
+
+```
+import nltk
+nltk.download('wordnet')
+```
+
 
 ## Preprocessing
 

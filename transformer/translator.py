@@ -154,7 +154,7 @@ class Translator(nn.Module):
             #     print(to_sentence(beam_output[i], self.src_vocab)[:150])
 
             if n_complete_sentences == self.beam_size:
-                ans_row_idx = (scores / (eos_indices.float() ** 0.7)).max(0)[1].item()
+                ans_row_idx = scores.max(0)[1].item()
                 break
 
         return beam_output[ans_row_idx][:eos_indices[ans_row_idx]].tolist()
